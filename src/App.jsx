@@ -14,7 +14,7 @@ function App() {
   return <>
 
     <Router>
-      <div className='bg-gray-100 h-screen w-screen'>
+      <div className='bg-gradient-to-br from-indigo-100 to-purple-200 h-screen w-screen'>
         {/* <nav>
           <ul>
             <li>
