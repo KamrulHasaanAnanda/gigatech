@@ -1,43 +1,57 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import './App.css'
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import Home from './routes/home/Home';
 import Login from './routes/auth/Login';
 import SignUp from './routes/auth/SignUp';
 import UserInteraction from './routes/users/UserInteraction';
 import AppointmentManagement from './routes/appointment/AppointmentManagement';
+import { supabase } from './configs/supabase';
+
+const PrivateRoute = ({ element: Element, session, ...rest }) => {
+  return session ? <Element {...rest} session={session} /> : <Navigate to="/login" replace />;
+};
+const PublicRoute = ({ element: Element, session, ...rest }) => {
+  return !session ? <Element {...rest} /> : <Navigate to={`/user/${session?.user?.id}`} replace />;
+};
+
 
 function App() {
 
+  const [session, setSession] = useState(null)
 
-  return <>
-
-    <Router>
-      <div className='bg-gradient-to-br from-indigo-100 to-purple-200 h-screen w-screen'>
-        {/* <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/about">About</Link>
-            </li>
-          </ul>
-        </nav> */}
-
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/user/:userId" element={<UserInteraction />} />
-          <Route path="/appointment/:userId" element={<AppointmentManagement />} />
+  console.log('session', session)
 
 
-          {/* <Route path="/about" element={<About />} /> */}
-        </Routes>
-      </div>
-    </Router></>
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return <Router>
+    <div className='bg-gradient-to-br from-indigo-100 to-purple-200 min-h-screen'>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Home session={session} />} />
+        <Route path="/login" element={<PublicRoute element={Login} session={session} />} />
+        <Route path="/signup" element={<PublicRoute element={SignUp} session={session} />} />
+
+        {/* Private routes */}
+        <Route path="/user/:userId" element={<PrivateRoute element={UserInteraction} session={session} />} />
+        <Route path="/appointment/:userId" element={<PrivateRoute element={AppointmentManagement} session={session} />} />
+      </Routes>
+    </div>
+  </Router>
 }
 
 export default App

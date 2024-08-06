@@ -60,7 +60,7 @@ function UserInteraction() {
                                 <div className="flex items-center space-x-4">
                                     <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full" />
                                     <div>
-                                        <h3 className="font-semibold text-lg">{user.name}</h3>
+                                        <h3 className="font-semibold text-lg text-black">{user.name}</h3>
                                         <p className="text-gray-600">{user.email}</p>
                                     </div>
                                 </div>

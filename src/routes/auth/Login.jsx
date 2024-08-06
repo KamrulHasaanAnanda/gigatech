@@ -1,18 +1,30 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../../configs/supabase';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
+    console.log('supabase', supabase)
+
+    async function signInWithEmail() {
+        try {
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            // Handle successful login here
+        } catch (error) {
+            setError(error.message);
+        }
+
+
+    }
+
     const handleLogin = (e) => {
         e.preventDefault();
-        setError('');
-        // Handle login logic here
-        console.log('Login attempt with:', email, password);
-        // For demonstration, let's simulate an error
-        setError('Invalid email or password');
+        signInWithEmail()
+
     };
 
     return (
@@ -42,7 +54,7 @@ function Login() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300"
+                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white"
                                 placeholder="Email address"
                             />
                         </div>
@@ -57,7 +69,7 @@ function Login() {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300"
+                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white"
                                 placeholder="Password"
                             />
                         </div>

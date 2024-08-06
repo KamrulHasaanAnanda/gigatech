@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../../configs/supabase';
 
 function SignUp() {
     const [email, setEmail] = useState('');
@@ -7,12 +8,22 @@ function SignUp() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleSignUp = (e) => {
+
+
+    const handleSignUp = async (e) => {
         e.preventDefault();
         setError('');
         if (password === confirmPassword) {
-            // Handle sign-up logic here
-            console.log('Sign up successful');
+
+            try {
+                const { error } = await supabase.auth.signUp({ email, password });
+                if (error) throw error;
+                // Handle successful login here
+            } catch (error) {
+                setError(error.message);
+            }
+
+
         } else {
             setError('Passwords do not match');
         }
@@ -45,7 +56,7 @@ function SignUp() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300"
+                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white"
                                 placeholder="Email address"
                             />
                         </div>
@@ -60,7 +71,7 @@ function SignUp() {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300"
+                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white"
                                 placeholder="Password"
                             />
                         </div>
@@ -75,7 +86,7 @@ function SignUp() {
                                 required
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300"
+                                className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white"
                                 placeholder="Confirm Password"
                             />
                         </div>
