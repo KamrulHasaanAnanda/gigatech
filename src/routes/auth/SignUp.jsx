@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { supabase } from '../../configs/supabase';
 
 function SignUp() {
@@ -16,8 +16,29 @@ function SignUp() {
         if (password === confirmPassword) {
 
             try {
-                const { error } = await supabase.auth.signUp({ email, password });
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                console.log('data', data)
+
                 if (error) throw error;
+                if (data) {
+                    console.log('data', data)
+                    const { error } = await supabase
+                        .from('users')
+                        .insert({ email: data?.user?.email, authId: data?.user?.id })
+
+                    if (error) throw error;
+                    else {
+                        setError('');
+                        setSuccessMessage('User registered successfully');
+                        setEmail('');
+                        setPassword('');
+                        setConfirmPassword('');
+                        setTimeout(() => {
+                            setSuccessMessage('');
+                            Navigate("/login");
+                        }, 5000);
+                    }
+                }
                 // Handle successful login here
             } catch (error) {
                 setError(error.message);

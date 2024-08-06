@@ -1,41 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { supabase } from '../../configs/supabase';
 
 function UserInteraction() {
     const [users, setUsers] = useState([]);
+    const navigate = useNavigate();
+    const { userId } = useParams();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
     const [appointmentData, setAppointmentData] = useState({
         title: '',
         description: '',
         date: '',
-        time: ''
+        time: '',
+        to: '',
+        from: '',
     });
     const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
-        // Mock API call to fetch users
-        setUsers([
-            { id: 1, name: 'John Doe', email: 'john@example.com', avatar: 'https://i.pravatar.cc/150?img=1' },
-            { id: 2, name: 'Jane Smith', email: 'jane@example.com', avatar: 'https://i.pravatar.cc/150?img=2' },
-            { id: 3, name: 'Bob Johnson', email: 'bob@example.com', avatar: 'https://i.pravatar.cc/150?img=3' },
-        ]);
+        getUsers();
     }, []);
 
-    const handleScheduleAppointment = (e) => {
+    const getUsers = async () => {
+        const { data, error } = await supabase
+            .from('users')
+            .select()
+            .not('authId', 'eq', userId);
+
+        if (data?.length > 0) {
+            setUsers(data);
+        } else {
+            setUsers([]);
+        }
+    };
+
+    const handleScheduleAppointment = async (e) => {
         e.preventDefault();
-        console.log('Appointment scheduled:', { ...appointmentData, with: selectedUser });
-        setSuccessMessage(`Appointment scheduled with ${selectedUser.name} on ${appointmentData.date} at ${appointmentData.time}`);
-        // Reset form and selected user
-        setAppointmentData({ title: '', description: '', date: '', time: '' });
-        setSelectedUser(null);
+
+        const { title, description, date, time } = appointmentData;
+
+        // Validate date and time
+        if (!title || !description || !date || !time) {
+            setErrorMessage('All fields are required.');
+            return;
+        }
+
+        const currentDate = new Date();
+        const selectedDateTime = new Date(`${date}T${time}`);
+
+        if (selectedDateTime <= currentDate) {
+            setErrorMessage('Selected date and time must be in the future.');
+            return;
+        }
+
+        const values = {
+            title,
+            description,
+            date,
+            time,
+            to: selectedUser?.authId,
+            from: userId,
+        };
+
+        try {
+            const { error } = await supabase
+                .from('appointments')
+                .insert(values);
+
+            if (error) {
+                throw error;
+            }
+
+            setSuccessMessage('Appointment scheduled successfully');
+            setAppointmentData({ title: '', description: '', date: '', time: '' });
+            setSelectedUser(null);
+            setErrorMessage(''); // Clear any previous error message
+
+        } catch (error) {
+            setErrorMessage('An error occurred while scheduling the appointment.');
+        }
+
         setTimeout(() => setSuccessMessage(''), 5000);
     };
 
     const filteredUsers = users.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.split('@')[0].toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const handleRemoveSelectedUser = () => {
+        setSelectedUser(null);
+        setAppointmentData({ title: '', description: '', date: '', time: '' });
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 p-8">
@@ -53,15 +110,25 @@ function UserInteraction() {
                 </div>
 
                 <div className="mb-10">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-6">User List</h2>
+                    <div className='flex justify-between items-center'>
+                        <h2 className="text-2xl font-semibold text-gray-800 mb-6">User List</h2>
+
+                        <button
+                            onClick={() => navigate("/appointment/" + userId)}
+                            className="bg-gray-300 text-white px-6 py-2 rounded-lg hover:bg-gray-400 transition duration-300"
+                        >
+                            View appointments
+                        </button>
+
+                    </div>
                     <ul className="space-y-4">
                         {filteredUsers.map(user => (
                             <li key={user.id} className="bg-gray-50 p-4 rounded-lg flex justify-between items-center hover:shadow-md transition duration-300">
                                 <div className="flex items-center space-x-4">
-                                    <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full" />
+                                    <img src={'https://i.pravatar.cc/150?img=1'} alt={user.email} className="w-12 h-12 rounded-full" />
                                     <div>
-                                        <h3 className="font-semibold text-lg text-black">{user.name}</h3>
-                                        <p className="text-gray-600">{user.email}</p>
+                                        <h3 className="font-semibold text-lg text-black">{user.email}</h3>
+                                        <p className="text-gray-600">{user.email.split('@')[0]}</p>
                                     </div>
                                 </div>
                                 <button
@@ -76,8 +143,17 @@ function UserInteraction() {
                 </div>
 
                 {selectedUser && (
-                    <div className="bg-gray-50 p-8 rounded-xl shadow-inner">
-                        <h2 className="text-3xl font-semibold text-gray-800 mb-6">Schedule Appointment with {selectedUser.name}</h2>
+                    <div className="bg-gray-50 p-8 rounded-xl shadow-inner relative">
+                        <button
+                            onClick={handleRemoveSelectedUser}
+                            className="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition duration-300"
+                            aria-label="Remove selected user"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <h2 className="text-3xl font-semibold text-gray-800 mb-6">Schedule Appointment with {selectedUser.email.split('@')[0]}</h2>
                         <form onSubmit={handleScheduleAppointment} className="space-y-6">
                             <input
                                 type="text"
@@ -114,6 +190,12 @@ function UserInteraction() {
                                 Schedule Appointment
                             </button>
                         </form>
+                    </div>
+                )}
+
+                {errorMessage && (
+                    <div className="mt-8 p-4 bg-red-100 text-red-700 rounded-lg">
+                        {errorMessage}
                     </div>
                 )}
 
