@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../configs/supabase';
 
-function UserInteraction() {
+function UserInteraction({ session }) {
     const [users, setUsers] = useState([]);
     const navigate = useNavigate();
     const { userId } = useParams();
@@ -13,8 +13,6 @@ function UserInteraction() {
         description: '',
         date: '',
         time: '',
-        to: '',
-        from: '',
     });
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -41,7 +39,6 @@ function UserInteraction() {
 
         const { title, description, date, time } = appointmentData;
 
-        // Validate date and time
         if (!title || !description || !date || !time) {
             setErrorMessage('All fields are required.');
             return;
@@ -60,8 +57,10 @@ function UserInteraction() {
             description,
             date,
             time,
-            to: selectedUser?.authId,
-            from: userId,
+            sender: session?.user?.id,
+            reciever: selectedUser?.id,
+            sender_email: session?.user?.email,
+            reciever_email: selectedUser?.email
         };
 
         try {
@@ -76,7 +75,7 @@ function UserInteraction() {
             setSuccessMessage('Appointment scheduled successfully');
             setAppointmentData({ title: '', description: '', date: '', time: '' });
             setSelectedUser(null);
-            setErrorMessage(''); // Clear any previous error message
+            setErrorMessage('');
 
         } catch (error) {
             setErrorMessage('An error occurred while scheduling the appointment.');
@@ -94,10 +93,27 @@ function UserInteraction() {
         setAppointmentData({ title: '', description: '', date: '', time: '' });
     };
 
+    const handleLogout = async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error('Error logging out:', error.message);
+        } else {
+            navigate('/login');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 p-8">
             <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-8">
-                <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">User Interaction</h1>
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-4xl font-bold text-gray-800">User Interaction</h1>
+                    <button
+                        onClick={handleLogout}
+                        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition duration-300"
+                    >
+                        Logout
+                    </button>
+                </div>
 
                 <div className="mb-8">
                     <input
@@ -109,17 +125,15 @@ function UserInteraction() {
                     />
                 </div>
 
-                <div className="mb-10">
-                    <div className='flex justify-between items-center'>
+                <div className="mb-10 max-h-96 overflow-y-auto">
+                    <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-semibold text-gray-800 mb-6">User List</h2>
-
                         <button
                             onClick={() => navigate("/appointment/" + userId)}
                             className="bg-gray-300 text-white px-6 py-2 rounded-lg hover:bg-gray-400 transition duration-300"
                         >
                             View appointments
                         </button>
-
                     </div>
                     <ul className="space-y-4">
                         {filteredUsers.map(user => (
@@ -143,7 +157,7 @@ function UserInteraction() {
                 </div>
 
                 {selectedUser && (
-                    <div className="bg-gray-50 p-8 rounded-xl shadow-inner relative">
+                    <div className="bg-gray-50 p-8 rounded-xl shadow-inner relative max-h-96 overflow-y-auto">
                         <button
                             onClick={handleRemoveSelectedUser}
                             className="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition duration-300"

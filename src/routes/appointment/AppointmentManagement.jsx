@@ -1,32 +1,51 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '../../configs/supabase';
 
-function AppointmentManagement() {
+function AppointmentManagement({ session }) {
+
+    const { userId } = useParams();
+
     const [appointments, setAppointments] = useState([]);
     const [filter, setFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('date');
+    const [appointmentType, setAppointmentType] = useState('all');
 
     useEffect(() => {
-        const mockAppointments = [
-            { id: 1, title: 'Meeting with John', date: '2024-08-10', time: '10:00', status: 'pending', isScheduler: true, audioMessage: null },
-            { id: 2, title: 'Project Discussion', date: '2024-08-05', time: '14:00', status: 'accepted', isScheduler: false, audioMessage: 'audio_url_here' },
-            { id: 3, title: 'Team Sync', date: '2024-07-30', time: '11:00', status: 'declined', isScheduler: true, audioMessage: null },
-        ];
-        setAppointments(mockAppointments);
+        getAppointments();
     }, []);
+
+    const getAppointments = async () => {
+        const { data, error } = await supabase
+            .from('appointments')
+            .select()
+            .or(`sender.eq.${userId},reciever.eq.${userId}`)
+
+        if (data?.length > 0) {
+            setAppointments(data);
+        } else {
+            setAppointments([]);
+        }
+    };
 
     const filteredAndSortedAppointments = appointments
         .filter(appointment => {
             const matchesSearch = appointment.title.toLowerCase().includes(searchTerm.toLowerCase());
             const appointmentDate = new Date(`${appointment.date}T${appointment.time}`);
             const isUpcoming = appointmentDate > new Date();
+            const isSent = appointment.sender === userId;
 
             if (filter === 'upcoming' && !isUpcoming) return false;
             if (filter === 'past' && isUpcoming) return false;
+            if (appointmentType === 'sent' && !isSent) return false;
+            if (appointmentType === 'received' && isSent) return false;
 
             return matchesSearch;
         })
         .sort((a, b) => {
+
+            console.log('a,b', a, b)
             if (sortBy === 'date') {
                 return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
             } else if (sortBy === 'title') {
@@ -41,16 +60,17 @@ function AppointmentManagement() {
         ));
     };
 
-    const handleAccept = (id) => {
-        setAppointments(appointments.map(app =>
-            app.id === id ? { ...app, status: 'accepted' } : app
-        ));
-    };
+    const handleStatusChange = async (id, status) => {
+        const { error } = await supabase
+            .from('appointments')
+            .update({ status })
+            .eq('id', id);
 
-    const handleDecline = (id) => {
-        setAppointments(appointments.map(app =>
-            app.id === id ? { ...app, status: 'declined' } : app
-        ));
+        if (error) {
+            throw error;
+        } else {
+            getAppointments();
+        }
     };
 
     const getStatusColor = (status) => {
@@ -93,46 +113,50 @@ function AppointmentManagement() {
                         <option value="date">Sort by Date</option>
                         <option value="title">Sort by Title</option>
                     </select>
+                    <select
+                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
+                        value={appointmentType}
+                        onChange={(e) => setAppointmentType(e.target.value)}
+                    >
+                        <option value="all">All Appointments</option>
+                        <option value="sent">Sent</option>
+                        <option value="received">Received</option>
+                    </select>
                 </div>
 
-                <div className="space-y-6">
-                    {filteredAndSortedAppointments.map(appointment => (
-                        <div key={appointment.id} className="bg-gray-50 p-6 rounded-xl shadow-md hover:shadow-lg transition duration-300">
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-2xl font-semibold">{appointment.title}</h3>
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(appointment.status)}`}>
-                                    {appointment.status}
-                                </span>
-                            </div>
-                            <p className="text-gray-600 mb-2">Date: {appointment.date} | Time: {appointment.time}</p>
-                            {appointment.audioMessage && (
-                                <div className="mt-4">
-                                    <h4 className="text-lg font-medium mb-2">Audio Message:</h4>
-                                    <audio controls className="w-full">
-                                        <source src={appointment.audioMessage} type="audio/mpeg" />
-                                        Your browser does not support the audio element.
-                                    </audio>
+
+                <div className="space-y-5">
+                    {filteredAndSortedAppointments.map(appointment => {
+                        const isSent = appointment.sender_email === session?.user?.email;
+
+
+                        return (
+                            <div key={appointment.id} className="bg-white rounded-lg shadow-lg overflow-hidden ">
+                                <div className={`h-2 ${getStatusColor(appointment.status)}`}></div>
+                                <div className="p-6">
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{appointment.title}</h3>
+                                    <p className="text-sm text-gray-600 mb-4">{appointment.description}</p>
+                                    <p className="text-sm text-gray-500 mb-1">📅 {new Date(appointment.date).toLocaleDateString()}</p>
+                                    <p className="text-sm text-gray-500 mb-4">
+                                        {isSent ? `🚀 To: ${appointment.reciever_email}` : `📩 From: ${appointment.sender_email}`}
+                                    </p>
+                                    <div className="flex justify-end space-x-2">
+
+                                        {!isSent && appointment.status === 'pending' && (
+                                            <>
+                                                <button onClick={() => handleStatusChange(appointment.id, "accepted")} className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-300">
+                                                    Accept
+                                                </button>
+                                                <button onClick={() => handleStatusChange(appointment.id, 'declined')} className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300">
+                                                    Decline
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
-                            )}
-                            <div className="mt-6 space-x-3">
-                                {appointment.isScheduler && appointment.status !== 'cancelled' && new Date(`${appointment.date}T${appointment.time}`) > new Date() && (
-                                    <button onClick={() => handleCancel(appointment.id)} className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-300">
-                                        Cancel
-                                    </button>
-                                )}
-                                {!appointment.isScheduler && appointment.status === 'pending' && (
-                                    <>
-                                        <button onClick={() => handleAccept(appointment.id)} className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-300">
-                                            Accept
-                                        </button>
-                                        <button onClick={() => handleDecline(appointment.id)} className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-300">
-                                            Decline
-                                        </button>
-                                    </>
-                                )}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>
