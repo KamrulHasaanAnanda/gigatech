@@ -5,6 +5,8 @@ import AuthLayout from '../../components/auth/AuthLayout';
 
 function SignUp() {
     const [email, setEmail] = useState('');
+    const [uName, setUName] = useState('');
+
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
@@ -25,7 +27,7 @@ function SignUp() {
                     console.log('data', data)
                     const { error } = await supabase
                         .from('users')
-                        .insert({ email: data?.user?.email, authId: data?.user?.id })
+                        .insert({ email: data?.user?.email, authId: data?.user?.id, name: uName })
 
                     if (error) throw error;
                     else {
@@ -56,6 +58,21 @@ function SignUp() {
             <div className="space-y-4">
                 <div>
                     <label htmlFor="email-address" className="sr-only">
+                        User name
+                    </label>
+                    <input
+                        id="email-address"
+                        name="uname"
+                        type="text"
+                        required
+                        value={uName}
+                        onChange={(e) => setUName(e.target.value)}
+                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
+                        placeholder="User name"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="email-address" className="sr-only">
                         Email address
                     </label>
                     <input
@@ -65,10 +82,13 @@ function SignUp() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
+                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
                         placeholder="Email address"
                     />
                 </div>
+
+
+
                 <div>
                     <label htmlFor="password" className="sr-only">
                         Password
@@ -80,7 +100,7 @@ function SignUp() {
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
+                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
                         placeholder="Password"
                     />
                 </div>
@@ -95,7 +115,7 @@ function SignUp() {
                         required
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
+                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
                         placeholder="Confirm Password"
                     />
                 </div>

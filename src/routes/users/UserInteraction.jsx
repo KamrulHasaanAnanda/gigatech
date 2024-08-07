@@ -6,10 +6,13 @@ import MainLayout from '../../components/MainLayout';
 
 function UserInteraction({ session }) {
     const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(false);
+
     const navigate = useNavigate();
     const { userId } = useParams();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
     const [appointmentData, setAppointmentData] = useState({
         title: '',
         description: '',
@@ -36,8 +39,23 @@ function UserInteraction({ session }) {
         }
     };
 
+
+    async function uploadAudio(file) {
+        const fileName = `${Date.now()}_${file.name}`
+        const { data, error } = await supabase.storage
+            .from('audio-bucket')
+            .upload(fileName, file)
+
+        if (error) {
+            toast.error(error)
+            return null
+        }
+
+        return data.path
+    }
     const handleScheduleAppointment = async (e) => {
         e.preventDefault();
+        setLoading(true)
 
         const { title, description, date, time } = appointmentData;
 
@@ -60,12 +78,16 @@ function UserInteraction({ session }) {
             date,
             time,
             sender: session?.user?.id,
-            reciever: selectedUser?.id,
+            reciever: selectedUser?.authId,
             sender_email: session?.user?.email,
             reciever_email: selectedUser?.email
         };
 
         try {
+            if (selectedFile) {
+                const audioPath = await uploadAudio(selectedFile);
+                values.file_path = audioPath;
+            }
             const { error } = await supabase
                 .from('appointments')
                 .insert(values);
@@ -78,16 +100,19 @@ function UserInteraction({ session }) {
             setAppointmentData({ title: '', description: '', date: '', time: '' });
             setSelectedUser(null);
             setErrorMessage('');
+            setLoading(false)
 
         } catch (error) {
             setErrorMessage('An error occurred while scheduling the appointment.');
+            setLoading(false)
+
         }
 
         setTimeout(() => setSuccessMessage(''), 5000);
     };
 
     const filteredUsers = users.filter(user =>
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.split('@')[0].toLowerCase().includes(searchTerm.toLowerCase())
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) || user.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleRemoveSelectedUser = () => {
@@ -95,14 +120,13 @@ function UserInteraction({ session }) {
         setAppointmentData({ title: '', description: '', date: '', time: '' });
     };
 
-    const handleLogout = async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            console.error('Error logging out:', error.message);
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if (file && file.type.startsWith('audio/')) {
+            setSelectedFile(file);
         } else {
-            toast.success("Successfully logged out")
-            navigate('/login');
-
+            toast.error('Please select a valid audio file.');
+            event.target.value = null; // Reset the file input
         }
     };
 
@@ -122,15 +146,30 @@ function UserInteraction({ session }) {
                 />
             </div>
 
-            <div className="mb-10 max-h-96 overflow-y-auto">
+            <div className="mb-6 max-h-96 overflow-y-auto">
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-semibold text-white mb-6">User List</h2>
                     <button
                         onClick={() => navigate("/appointment/" + userId)}
-                        className="bg-gray-300 text-white px-6 py-2 rounded-lg hover:bg-gray-400 transition duration-300"
+                        className="bg-gray-300 text-white px-6 py-2 rounded-lg hover:bg-gray-400 transition duration-300 flex items-center"
                     >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 7V3m0 0h8m-8 0H7a2 2 0 00-2 2v2m13 11v2a2 2 0 01-2 2h-1m-4 0H7a2 2 0 01-2-2v-2m12-11V5a2 2 0 00-2-2h-1m-4 0h-1a2 2 0 00-2 2v2m12 11v2a2 2 0 01-2 2h-1m-4 0H7a2 2 0 01-2-2v-2M5 7h14m-2 4H7m0 4h6"
+                            />
+                        </svg>
                         View appointments
                     </button>
+
                 </div>
                 <ul className="space-y-4">
                     {filteredUsers.map(user => (
@@ -138,8 +177,8 @@ function UserInteraction({ session }) {
                             <div className="flex items-center space-x-4">
                                 <img src={'https://i.pravatar.cc/150?img=1'} alt={user.email} className="w-12 h-12 rounded-full" />
                                 <div>
-                                    <h3 className="font-semibold text-lg text-white">{user.email}</h3>
-                                    <p className="text-gray-600">{user.email.split('@')[0]}</p>
+                                    <h3 className="font-semibold text-lg text-white">{user.name}</h3>
+                                    <p className="text-gray-600">{user.email}</p>
                                 </div>
                             </div>
                             <button
@@ -154,7 +193,7 @@ function UserInteraction({ session }) {
             </div>
 
             {selectedUser && (
-                <div className="bg-gray-50 p-8 rounded-xl shadow-inner relative max-h-96 overflow-y-auto">
+                <div className="bg-[#242424] p-4 rounded-xl shadow-inner relative ">
                     <button
                         onClick={handleRemoveSelectedUser}
                         className="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition duration-300"
@@ -164,7 +203,7 @@ function UserInteraction({ session }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
-                    <h2 className="text-3xl font-semibold text-gray-800 mb-6">Schedule Appointment with {selectedUser.email.split('@')[0]}</h2>
+                    <h2 className="text-3xl font-semibold text-white mb-6">Schedule Appointment with {selectedUser.name}</h2>
                     <form onSubmit={handleScheduleAppointment} className="space-y-6">
                         <input
                             type="text"
@@ -176,11 +215,20 @@ function UserInteraction({ session }) {
                         />
                         <textarea
                             placeholder="Description"
-                            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300 h-32"
+                            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300 h-20"
                             value={appointmentData.description}
                             onChange={(e) => setAppointmentData({ ...appointmentData, description: e.target.value })}
                             required
                         ></textarea>
+                        <input
+
+                            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
+
+                            type="file" accept="audio/*" onChange={handleFileChange}
+                        />
+
+
+
                         <div className="flex space-x-4">
                             <input
                                 type="date"
@@ -197,7 +245,7 @@ function UserInteraction({ session }) {
                                 required
                             />
                         </div>
-                        <button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 px-6 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition duration-300">
+                        <button type="submit" className={`w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 px-6 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition duration-300 ${loading & "opacity-60"}`}>
                             Schedule Appointment
                         </button>
                     </form>
