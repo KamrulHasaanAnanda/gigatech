@@ -85,61 +85,67 @@ function AppointmentManagement({ session }) {
     };
 
     return (
-        <MainLayout title={"Appointment Management"}>
-
-
-            <div className="mb-8 flex flex-wrap gap-4">
-                <input
-                    type="text"
-                    placeholder="Search appointments..."
-                    className="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <select
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                >
-                    <option value="all">All</option>
-                    <option value="upcoming">Upcoming</option>
-                    <option value="past">Past</option>
-                </select>
-                <select
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                >
-                    <option value="date">Sort by Date</option>
-                    <option value="title">Sort by Title</option>
-                </select>
-                <select
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
-                    value={appointmentType}
-                    onChange={(e) => setAppointmentType(e.target.value)}
-                >
-                    <option value="all">All Appointments</option>
-                    <option value="sent">Sent</option>
-                    <option value="received">Received</option>
-                </select>
+        <MainLayout title={"Appointments"}>
+            <div className="mb-8">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-grow">
+                        <input
+                            type="text"
+                            placeholder="Search appointments..."
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300 bg-[#1c2432]"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex flex-wrap gap-4">
+                        <select
+                            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300 bg-[#1c2432]"
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value)}
+                        >
+                            <option value="all">All</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="past">Past</option>
+                        </select>
+                        <select
+                            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300 bg-[#1c2432]"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                        >
+                            <option value="date">Sort by Date</option>
+                            <option value="title">Sort by Title</option>
+                        </select>
+                        <select
+                            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300 bg-[#1c2432]"
+                            value={appointmentType}
+                            onChange={(e) => setAppointmentType(e.target.value)}
+                        >
+                            <option value="all">All Appointments</option>
+                            <option value="sent">Sent</option>
+                            <option value="received">Received</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-4">
                 {filteredAndSortedAppointments.map(appointment => {
-                    const isSent = appointment.sender_email === session?.user?.email;
-
-
+                    const isSent = appointment.sender === userId;
                     return (
-                        <div key={appointment.id} className="bg-white rounded-lg shadow-lg overflow-hidden ">
+                        <div key={appointment.id} className="bg-[#1c2432] rounded-lg shadow-md overflow-hidden">
                             <div className={`h-2 ${getStatusColor(appointment.status)}`}></div>
                             <div className="p-6">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">{appointment.title}</h3>
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className="text-xl font-semibold text-white">{appointment.title}</h3>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)} bg-opacity-20`}>
+                                        {appointment.status}
+                                    </span>
+                                </div>
                                 <p className="text-sm text-gray-600 mb-4">{appointment.description}</p>
-                                <p className="text-sm text-gray-500 mb-1">📅 {new Date(appointment.date).toLocaleDateString()}</p>
-                                <p className="text-sm text-gray-500 mb-4">
-                                    {isSent ? `🚀 To: ${appointment.reciever_email}` : `📩 From: ${appointment.sender_email}`}
+                                <p className="text-sm text-white mb-1">📅 {new Date(appointment.date).toLocaleDateString()}</p>
+                                <p className="text-sm text-white mb-4">
+                                    {isSent ? `🚀 ${appointment.reciever_email}` : `📩${appointment.sender_email}`}
                                 </p>
                                 <div className="flex justify-end space-x-2">
-
                                     {!isSent && appointment.status === 'pending' && (
                                         <>
                                             <button onClick={() => handleStatusChange(appointment.id, "accepted")} className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-300">
