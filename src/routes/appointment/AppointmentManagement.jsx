@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../configs/supabase';
+import MainLayout from '../../components/MainLayout';
 
 function AppointmentManagement({ session }) {
 
@@ -84,82 +85,79 @@ function AppointmentManagement({ session }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 p-8">
-            <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-8">
-                <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Appointment Management</h1>
-
-                <div className="mb-8 flex flex-wrap gap-4">
-                    <input
-                        type="text"
-                        placeholder="Search appointments..."
-                        className="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    <select
-                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                    >
-                        <option value="all">All</option>
-                        <option value="upcoming">Upcoming</option>
-                        <option value="past">Past</option>
-                    </select>
-                    <select
-                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                    >
-                        <option value="date">Sort by Date</option>
-                        <option value="title">Sort by Title</option>
-                    </select>
-                    <select
-                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
-                        value={appointmentType}
-                        onChange={(e) => setAppointmentType(e.target.value)}
-                    >
-                        <option value="all">All Appointments</option>
-                        <option value="sent">Sent</option>
-                        <option value="received">Received</option>
-                    </select>
-                </div>
+        <MainLayout title={"Appointment Management"}>
 
 
-                <div className="space-y-5">
-                    {filteredAndSortedAppointments.map(appointment => {
-                        const isSent = appointment.sender_email === session?.user?.email;
+            <div className="mb-8 flex flex-wrap gap-4">
+                <input
+                    type="text"
+                    placeholder="Search appointments..."
+                    className="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <select
+                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                >
+                    <option value="all">All</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                </select>
+                <select
+                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                >
+                    <option value="date">Sort by Date</option>
+                    <option value="title">Sort by Title</option>
+                </select>
+                <select
+                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
+                    value={appointmentType}
+                    onChange={(e) => setAppointmentType(e.target.value)}
+                >
+                    <option value="all">All Appointments</option>
+                    <option value="sent">Sent</option>
+                    <option value="received">Received</option>
+                </select>
+            </div>
+            <div className="space-y-5">
+                {filteredAndSortedAppointments.map(appointment => {
+                    const isSent = appointment.sender_email === session?.user?.email;
 
 
-                        return (
-                            <div key={appointment.id} className="bg-white rounded-lg shadow-lg overflow-hidden ">
-                                <div className={`h-2 ${getStatusColor(appointment.status)}`}></div>
-                                <div className="p-6">
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{appointment.title}</h3>
-                                    <p className="text-sm text-gray-600 mb-4">{appointment.description}</p>
-                                    <p className="text-sm text-gray-500 mb-1">📅 {new Date(appointment.date).toLocaleDateString()}</p>
-                                    <p className="text-sm text-gray-500 mb-4">
-                                        {isSent ? `🚀 To: ${appointment.reciever_email}` : `📩 From: ${appointment.sender_email}`}
-                                    </p>
-                                    <div className="flex justify-end space-x-2">
+                    return (
+                        <div key={appointment.id} className="bg-white rounded-lg shadow-lg overflow-hidden ">
+                            <div className={`h-2 ${getStatusColor(appointment.status)}`}></div>
+                            <div className="p-6">
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">{appointment.title}</h3>
+                                <p className="text-sm text-gray-600 mb-4">{appointment.description}</p>
+                                <p className="text-sm text-gray-500 mb-1">📅 {new Date(appointment.date).toLocaleDateString()}</p>
+                                <p className="text-sm text-gray-500 mb-4">
+                                    {isSent ? `🚀 To: ${appointment.reciever_email}` : `📩 From: ${appointment.sender_email}`}
+                                </p>
+                                <div className="flex justify-end space-x-2">
 
-                                        {!isSent && appointment.status === 'pending' && (
-                                            <>
-                                                <button onClick={() => handleStatusChange(appointment.id, "accepted")} className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-300">
-                                                    Accept
-                                                </button>
-                                                <button onClick={() => handleStatusChange(appointment.id, 'declined')} className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300">
-                                                    Decline
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
+                                    {!isSent && appointment.status === 'pending' && (
+                                        <>
+                                            <button onClick={() => handleStatusChange(appointment.id, "accepted")} className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-300">
+                                                Accept
+                                            </button>
+                                            <button onClick={() => handleStatusChange(appointment.id, 'declined')} className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300">
+                                                Decline
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
-                        );
-                    })}
-                </div>
+                        </div>
+                    );
+                })}
             </div>
-        </div>
+
+        </MainLayout>
     );
 }
 

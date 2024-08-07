@@ -7,6 +7,7 @@ import SignUp from './routes/auth/SignUp';
 import UserInteraction from './routes/users/UserInteraction';
 import AppointmentManagement from './routes/appointment/AppointmentManagement';
 import { supabase } from './configs/supabase';
+import { Toaster } from 'react-hot-toast';
 
 const PrivateRoute = ({ element: Element, session, ...rest }) => {
   return session ? <Element {...rest} session={session} /> : <Navigate to="/login" replace />;
@@ -42,7 +43,8 @@ function App() {
 
   return (
     <Router>
-      <div className='bg-gradient-to-br from-indigo-100 to-purple-200 min-h-screen'>
+      <div className='bg-white min-h-screen flex flex-col justify-center'>
+
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home session={session} />} />
@@ -53,7 +55,10 @@ function App() {
           <Route path="/user/:userId" element={<PrivateRoute element={UserInteraction} session={session} />} />
           <Route path="/appointment/:userId" element={<PrivateRoute element={AppointmentManagement} session={session} />} />
         </Routes>
+
+        <Toaster position=" bottom-right " />
       </div>
+
     </Router>
   )
 }
