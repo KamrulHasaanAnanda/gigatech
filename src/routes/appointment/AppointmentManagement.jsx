@@ -102,11 +102,11 @@ function AppointmentManagement({ session }) {
         <MainLayout title="Appointments">
             <div className="mb-8 bg-[#1c2432] p-6 rounded-lg shadow-lg">
                 <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-grow">
+                    <div className="flex-grow w-full sm:w-[40%]">
                         <input
                             type="text"
                             placeholder="Search appointments..."
-                            className="w-full p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-300 bg-[#2a3447] text-white placeholder-gray-400"
+                            className="w-full s p-3  border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-300 bg-[#2a3447] text-white placeholder-gray-400"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -115,7 +115,7 @@ function AppointmentManagement({ session }) {
                         {['filter', 'sortBy', 'appointmentType'].map((selectType) => (
                             <select
                                 key={selectType}
-                                className="p-3 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-300 bg-[#2a3447] text-white"
+                                className="p-3 w-full sm:w-[30%] border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-300 bg-[#2a3447] text-white"
                                 value={eval(selectType)}
                                 onChange={(e) => eval(`set${selectType.charAt(0).toUpperCase() + selectType.slice(1)}`)(e.target.value)}
                             >
@@ -152,15 +152,15 @@ function AppointmentManagement({ session }) {
                             <div className={`h-2 ${getStatusColor(appointment.status)}`}></div>
                             <div className="p-6">
                                 <div className="flex justify-between items-start mb-4">
-                                    <h3 className="text-2xl font-bold text-white">{appointment.title}</h3>
+                                    <h3 className="text-2xl font-bold text-white truncate">{appointment.title}</h3>
                                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(appointment.status)}`}>
                                         {appointment.status}
                                     </span>
                                 </div>
-                                <p className="text-gray-300 mb-4">{appointment.description}</p>
-                                <div className="flex justify-between items-center mb-4">
+                                <p className="text-gray-300 mb-4 " >{appointment.description}</p>
+                                <div className="flex justify-between items-center mb-4 flex-wrap">
                                     <p className="text-indigo-400">📅 {new Date(appointment.date).toLocaleDateString()}</p>
-                                    <p className="text-indigo-400">
+                                    <p className="text-indigo-400 truncate">
                                         {isSent ? `🚀 To: ${appointment.reciever_email}` : `📩 From: ${appointment.sender_email}`}
                                     </p>
                                 </div>
