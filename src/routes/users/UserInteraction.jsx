@@ -43,7 +43,7 @@ function UserInteraction({ session }) {
     async function uploadAudio(file) {
         const fileName = `${Date.now()}_${file.name}`
         const { data, error } = await supabase.storage
-            .from('audio-bucket')
+            .from('audio_bucket')
             .upload(fileName, file)
 
         if (error) {

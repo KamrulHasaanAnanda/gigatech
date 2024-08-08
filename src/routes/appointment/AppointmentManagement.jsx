@@ -15,38 +15,33 @@ function AppointmentManagement({ session }) {
         getAppointments();
     }, []);
 
-    const getPublicUrl = async (filePath) => {
+    const getPublicUrl = (filePath) => {
+
         try {
-            const { data, error } = await supabase
+            const { data, error } = supabase.storage
+                .from('audio_bucket') // Replace with your actual bucket name
+                .getPublicUrl(filePath)
 
-                .storage
-                .from('audio-bucket') // Replace with your actual bucket name
-                .getPublicUrl(filePath);
-
-            console.log('data', data.publicUrl)
+            console.log('data', data);
 
             if (error) throw error;
             return data.publicUrl;
         } catch (error) {
-
+            console.error('Error getting public URL:', error);
             return null;
         }
     };
 
     const getAppointments = async () => {
+
         const { data, error } = await supabase
             .from('appointments')
             .select()
             .or(`sender.eq.${userId},reciever.eq.${userId}`);
 
         if (data?.length > 0) {
-            const appointmentsWithAudioUrls = await Promise.all(data.map(async (appointment) => {
-                if (appointment.file_path) {
-                    appointment.audioUrl = await getPublicUrl(appointment.file_path);
-                }
-                return appointment;
-            }));
-            setAppointments(appointmentsWithAudioUrls);
+
+            setAppointments(data);
         } else {
             setAppointments([]);
         }
@@ -147,6 +142,13 @@ function AppointmentManagement({ session }) {
             <div className="space-y-6">
                 {filteredAndSortedAppointments.map(appointment => {
                     const isSent = appointment.sender === userId;
+
+                    let publicUrl
+                    if (appointment.file_path) {
+                        // console.log('appointment?.file_path', appointment?.file_path)
+                        publicUrl = getPublicUrl(appointment?.file_path)
+                        console.log('firpublicUrlst', publicUrl)
+                    }
                     return (
                         <div key={appointment.id} className="bg-[#1c2432] rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
                             <div className={`h-2 ${getStatusColor(appointment.status)}`}></div>
@@ -164,10 +166,12 @@ function AppointmentManagement({ session }) {
                                         {isSent ? `🚀 To: ${appointment.reciever_email}` : `📩 From: ${appointment.sender_email}`}
                                     </p>
                                 </div>
-                                {appointment.audioUrl && (
+                                {appointment.file_path && (
                                     <div className="mb-4">
                                         <audio
-                                            src={appointment.audioUrl}
+                                            id={'appointment' + appointment.id}
+
+                                            src={publicUrl}
                                             controls
                                             className="w-full"
                                             onError={(e) => console.error("Error loading audio:", e)}
