@@ -137,7 +137,7 @@ function UserInteraction({ session }) {
                 <input
                     type="text"
                     placeholder="Search users..."
-                    className="w-full h-12 p-4 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
+                    className="w-full h-12 p-4 bg-white border border-gray-300 rounded focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -145,10 +145,10 @@ function UserInteraction({ session }) {
 
             <div className="mb-6 max-h-96 overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-base sm:text-2xl font-semibold text-white">User List</h2>
+                    <h2 className="text-base sm:text-2xl font-semibold text-black">User List</h2>
                     <button
                         onClick={() => navigate("/appointment/" + userId)}
-                        className="bg-gray-300 text-white px-2 sm:px-6 py-2 rounded-lg hover:bg-gray-400 transition duration-300 flex items-center"
+                        className="bg-black text-white px-2 sm:px-6 py-2 rounded-lg hover:bg-gray-400 transition duration-300 flex items-center"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

@@ -95,7 +95,7 @@ function AppointmentManagement({ session }) {
 
     return (
         <MainLayout title="Appointments">
-            <div className="mb-8 bg-[#1c2432] p-6 rounded-lg shadow-lg">
+            <div className="mb-8">
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-grow w-full sm:w-[40%]">
                         <input
