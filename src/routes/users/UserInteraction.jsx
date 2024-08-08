@@ -39,7 +39,6 @@ function UserInteraction({ session }) {
         }
     };
 
-
     async function uploadAudio(file) {
         const fileName = `${Date.now()}_${file.name}`
         const { data, error } = await supabase.storage
@@ -47,20 +46,22 @@ function UserInteraction({ session }) {
             .upload(fileName, file)
 
         if (error) {
-            toast.error(error)
-            return null
+            toast.error(error.message);
+            return null;
         }
 
-        return data.path
+        return data.path;
     }
+
     const handleScheduleAppointment = async (e) => {
         e.preventDefault();
-        setLoading(true)
+        setLoading(true);
 
         const { title, description, date, time } = appointmentData;
 
         if (!title || !description || !date || !time) {
             setErrorMessage('All fields are required.');
+            setLoading(false);
             return;
         }
 
@@ -69,6 +70,7 @@ function UserInteraction({ session }) {
 
         if (selectedDateTime <= currentDate) {
             setErrorMessage('Selected date and time must be in the future.');
+            setLoading(false);
             return;
         }
 
@@ -80,7 +82,7 @@ function UserInteraction({ session }) {
             sender: session?.user?.id,
             reciever: selectedUser?.authId,
             sender_email: session?.user?.email,
-            reciever_email: selectedUser?.email
+            reciever_email: selectedUser?.email,
         };
 
         try {
@@ -88,6 +90,7 @@ function UserInteraction({ session }) {
                 const audioPath = await uploadAudio(selectedFile);
                 values.file_path = audioPath;
             }
+
             const { error } = await supabase
                 .from('appointments')
                 .insert(values);
@@ -100,12 +103,10 @@ function UserInteraction({ session }) {
             setAppointmentData({ title: '', description: '', date: '', time: '' });
             setSelectedUser(null);
             setErrorMessage('');
-            setLoading(false)
-
         } catch (error) {
             setErrorMessage('An error occurred while scheduling the appointment.');
-            setLoading(false)
-
+        } finally {
+            setLoading(false);
         }
 
         setTimeout(() => setSuccessMessage(''), 5000);
@@ -130,17 +131,13 @@ function UserInteraction({ session }) {
         }
     };
 
-
-
     return (
         <MainLayout title={"Schedule"}>
-
-
             <div className="mb-8">
                 <input
                     type="text"
                     placeholder="Search users..."
-                    className="w-full h-12  p-4 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
+                    className="w-full h-12 p-4 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -148,7 +145,7 @@ function UserInteraction({ session }) {
 
             <div className="mb-6 max-h-96 overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className=" text-base  sm:text-2xl font-semibold text-white">User List</h2>
+                    <h2 className="text-base sm:text-2xl font-semibold text-white">User List</h2>
                     <button
                         onClick={() => navigate("/appointment/" + userId)}
                         className="bg-gray-300 text-white px-2 sm:px-6 py-2 rounded-lg hover:bg-gray-400 transition duration-300 flex items-center"
@@ -169,7 +166,6 @@ function UserInteraction({ session }) {
                         </svg>
                         View appointments
                     </button>
-
                 </div>
                 <ul className="space-y-4">
                     {filteredUsers.map(user => (
@@ -188,15 +184,12 @@ function UserInteraction({ session }) {
                                 </button>
                             </div>
                         </li>
-
-
-
                     ))}
                 </ul>
             </div>
 
             {selectedUser && (
-                <div className="bg-[#242424] p-4 rounded-xl shadow-inner relative ">
+                <div className="bg-[#242424] p-4 rounded-xl shadow-inner relative">
                     <button
                         onClick={handleRemoveSelectedUser}
                         className="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition duration-300"
@@ -206,7 +199,7 @@ function UserInteraction({ session }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
-                    <h2 className="text-3xl font-semibold text-white mb-6">Schedule Appointment with {selectedUser.name}</h2>
+                    <h2 className=" text-base sm:text-3xl font-semibold text-white mb-6">Appointment with {selectedUser.name}</h2>
                     <form onSubmit={handleScheduleAppointment} className="space-y-6">
                         <input
                             type="text"
@@ -224,15 +217,12 @@ function UserInteraction({ session }) {
                             required
                         ></textarea>
                         <input
-
+                            type="file"
+                            accept="audio/*"
                             className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
-
-                            type="file" accept="audio/*" onChange={handleFileChange}
+                            onChange={handleFileChange}
                         />
-
-
-
-                        <div className="flex space-x-4">
+                        <div className="flex gap-3 flex-wrap">
                             <input
                                 type="date"
                                 className="flex-1 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition duration-300"
@@ -248,8 +238,12 @@ function UserInteraction({ session }) {
                                 required
                             />
                         </div>
-                        <button type="submit" className={`w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 px-6 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition duration-300 ${loading & "opacity-60"}`}>
-                            Schedule Appointment
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 px-6 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition duration-300 ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        >
+                            {loading ? 'Scheduling...' : 'Schedule Appointment'}
                         </button>
                     </form>
                 </div>
@@ -266,7 +260,6 @@ function UserInteraction({ session }) {
                     {successMessage}
                 </div>
             )}
-
         </MainLayout>
     );
 }
