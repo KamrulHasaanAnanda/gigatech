@@ -67,7 +67,7 @@ function SignUp() {
                         required
                         value={uName}
                         onChange={(e) => setUName(e.target.value)}
-                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
+                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white"
                         placeholder="User name"
                     />
                 </div>
@@ -82,7 +82,7 @@ function SignUp() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
+                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white"
                         placeholder="Email address"
                     />
                 </div>
@@ -100,7 +100,7 @@ function SignUp() {
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
+                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white"
                         placeholder="Password"
                     />
                 </div>
@@ -115,7 +115,7 @@ function SignUp() {
                         required
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-[#1c2432]"
+                        className="appearance-none rounded-lg w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white"
                         placeholder="Confirm Password"
                     />
                 </div>
